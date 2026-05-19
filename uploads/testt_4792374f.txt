@@ -1,4 +1,0 @@
-Python is a high-level, interpreted, general-purpose language known for readability, dynamic typing,
-and automatic memory management. It supports multiple paradigms (procedural, object-oriented)
-and uses indentation instead of braces for code blocks, making it popular for web development, data
-science

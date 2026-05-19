@@ -1,13 +1,12 @@
 """FastAPI entry point for the RAG Study Assistant backend."""
 
-from backend.app.routes.export import router as export_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.db.database import init_db
-from backend.app.routes import chat, upload
-from backend.app.utils.helpers import ensure_project_dirs
+from app.db.database import init_db
+from app.routes import chat, upload
+from app.routes.export import router as export_router
+from app.utils.helpers import ensure_project_dirs
 
 
 app = FastAPI(
@@ -15,6 +14,8 @@ app = FastAPI(
     description="Upload study material and ask grounded questions from it.",
     version="0.1.0",
 )
+
+# ── Single CORS middleware (was accidentally added twice before) ──────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,31 +23,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(export_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.include_router(upload.router)
+app.include_router(chat.router)
 
 
+# ── Startup ───────────────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def on_startup() -> None:
     """Prepare runtime folders and SQLite tables."""
-
     ensure_project_dirs()
     init_db()
 
 
+# ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/")
 async def health_check() -> dict[str, str]:
     """Simple health endpoint for local checks and Render."""
-
     return {"status": "ok", "message": "RAG Study Assistant API is running."}
-
-
-app.include_router(upload.router)
-app.include_router(chat.router)

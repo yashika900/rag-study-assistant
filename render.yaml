@@ -1,20 +1,13 @@
 services:
-  # ── Backend (FastAPI) ───────────────────────────────────────────────────────
   - type: web
     name: rag-study-assistant-backend
     env: python
     plan: free
-    rootDir: backend                        # ← Render runs from here
-
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
-
-    # Module path is now  app.main:app  (not backend.app.main:app)
-    # because rootDir is already "backend/".
-    # $PORT is set automatically by Render — never hardcode 10000.
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-
     envVars:
       - key: GEMINI_API_KEY
-        sync: false                         # set manually in Render dashboard
+        sync: false
       - key: PYTHON_VERSION
-        value: "3.11"                       # explicit avoids build surprises
+        value: "3.11"

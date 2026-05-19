@@ -1,19 +1,32 @@
+# ── Web framework ────────────────────────────────────────────────────────────
 fastapi
 uvicorn[standard]
 python-multipart
 pydantic
 python-dotenv
 
+# ── LangChain stack ──────────────────────────────────────────────────────────
 langchain-core
 langchain-text-splitters
 langchain-google-genai
 langchain-chroma==0.2.6
 chromadb==1.0.21
-sentence-transformers==3.3.1
-torch==2.5.1
 
+# ── Gemini SDK (embeddings) ───────────────────────────────────────────────────
+google-generativeai
+
+# ── Document parsing ─────────────────────────────────────────────────────────
 pypdf
 python-docx
 
-streamlit
-requests
+# ── Utilities ────────────────────────────────────────────────────────────────
+reportlab
+python-multipart
+
+# REMOVED — caused OOM crash on Render free tier (512MB):
+#   sentence-transformers==3.3.1
+#   torch==2.5.1
+#
+# REMOVED — frontend only, not needed in backend:
+#   streamlit
+#   requests

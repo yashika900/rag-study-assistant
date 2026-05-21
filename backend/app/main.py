@@ -3,10 +3,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db.database import init_db
-from app.routes import chat, upload
-from app.routes.export import router as export_router
-from app.utils.helpers import ensure_project_dirs
+from backend.app.db.database import init_db
+from backend.app.routes import chat, upload
+from backend.app.routes.export import router as export_router
+from backend.app.utils.helpers import ensure_project_dirs
 
 
 app = FastAPI(

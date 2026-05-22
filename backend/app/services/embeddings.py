@@ -16,7 +16,7 @@ from langchain_core.embeddings import Embeddings
 # Model config
 # ---------------------------------------------------------------------------
 
-EMBEDDING_MODEL_NAME = "models/embedding-001"
+EMBEDDING_MODEL_NAME = "models/embedding-004"
 _BATCH_SIZE = 50          # Gemini allows up to 100 per batch call
 _RETRY_ATTEMPTS = 3
 _RETRY_DELAY = 2.0        # seconds between retries

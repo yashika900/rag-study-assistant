@@ -31,7 +31,10 @@ def _get_client() -> genai.Client:
             "GEMINI_API_KEY is not set. "
             "Add it to your .env file or Render environment variables."
         )
-    return genai.Client(api_key=api_key)
+    return genai.Client(
+        api_key=api_key,
+        http_options={"api_version": "v1"},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -118,6 +121,7 @@ def get_embedding_model() -> LocalSentenceTransformerEmbeddings:
     """Return the reusable embedding wrapper used by Chroma."""
     print(f"Initialising Gemini embedding model: {EMBEDDING_MODEL_NAME}")
     return LocalSentenceTransformerEmbeddings()
+
 
 
 def get_sentence_transformer() -> LocalSentenceTransformerEmbeddings:

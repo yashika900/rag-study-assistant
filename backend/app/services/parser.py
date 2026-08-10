@@ -1,15 +1,19 @@
 """Document parsing service for PDF, TXT, and DOCX files."""
 
-from backend.app.services.ocr import (
-    extract_text_from_image,
-    SUPPORTED_IMAGE_TYPES,
-)
 import traceback
 from pathlib import Path
 
+import fitz
 from docx import Document as DocxDocument
 from langchain_core.documents import Document
+from PIL import Image
 from pypdf import PdfReader
+
+from backend.app.services.ocr import (
+    OCRProcessingError,
+    SUPPORTED_IMAGE_TYPES,
+    extract_text_from_image,
+)
 
 
 class DocumentParsingError(Exception):
@@ -49,7 +53,7 @@ def parse_document(file_path: Path) -> list[Document]:
 
 
 def _parse_pdf(file_path: Path) -> list[Document]:
-    """Extract one LangChain document per PDF page."""
+    """Extract PDF text, falling back to OCR for scanned/image PDFs."""
 
     try:
         reader = PdfReader(str(file_path))
@@ -64,12 +68,81 @@ def _parse_pdf(file_path: Path) -> list[Document]:
                         metadata={"source": file_path.name, "page": index},
                     )
                 )
-        return documents
+
+        if documents:
+            print(f"PDF text extraction produced {len(documents)} readable pages")
+            return documents
+
+        print("No selectable PDF text found. Starting OCR fallback...")
+        return _ocr_pdf(file_path)
     except Exception as exc:
         print("\n===== ERROR =====")
         print(str(exc))
         traceback.print_exc()
         raise DocumentParsingError("Could not read the PDF file.") from exc
+
+
+def _ocr_pdf(file_path: Path) -> list[Document]:
+    """Render scanned PDF pages to images and OCR them with Tesseract."""
+
+    documents: list[Document] = []
+
+    try:
+        pdf = fitz.open(str(file_path))
+        for page_index in range(len(pdf)):
+            page_number = page_index + 1
+            print(f"OCR processing PDF page {page_number}/{len(pdf)}")
+
+            page = pdf.load_page(page_index)
+            pixmap = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+            image = Image.frombytes("RGB", [pixmap.width, pixmap.height], pixmap.samples)
+
+            try:
+                text = _ocr_image_object(image)
+            except OCRProcessingError:
+                continue
+
+            if text.strip():
+                documents.append(
+                    Document(
+                        page_content=_clean_text(text),
+                        metadata={"source": file_path.name, "page": page_number},
+                    )
+                )
+    except Exception as exc:
+        print("\n===== ERROR =====")
+        print(str(exc))
+        traceback.print_exc()
+        raise DocumentParsingError(f"PDF OCR failed: {exc}") from exc
+    finally:
+        try:
+            pdf.close()
+        except Exception:
+            pass
+
+    if not documents:
+        raise DocumentParsingError(
+            "Could not extract text from this PDF. It may be scanned, handwritten, or too low quality for OCR."
+        )
+
+    print(f"PDF OCR produced {len(documents)} readable pages")
+    return documents
+
+
+def _ocr_image_object(image: Image.Image) -> str:
+    """OCR an in-memory image object."""
+
+    try:
+        import pytesseract
+
+        text = pytesseract.image_to_string(image.convert("L")).strip()
+    except Exception as exc:
+        raise OCRProcessingError(f"OCR extraction failed: {exc}") from exc
+
+    if not text:
+        raise OCRProcessingError("No readable text found in image.")
+
+    return text
 
 
 def _parse_txt(file_path: Path) -> list[Document]:

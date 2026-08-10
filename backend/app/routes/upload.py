@@ -3,7 +3,7 @@
 import traceback
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from backend.app.db.database import clear_chat_history
@@ -18,10 +18,14 @@ router = APIRouter()
 
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
+async def upload_file(
+    file: UploadFile = File(...),
+    reset_index: bool = Form(True),
+) -> UploadResponse:
     """Save, parse, chunk, and embed one uploaded study document."""
 
     print("\n===== UPLOAD PIPELINE START =====")
+    print(f"Reset index before this upload: {reset_index}")
     ensure_project_dirs()
 
     if not file.filename or not is_supported_file(file.filename):
@@ -66,6 +70,10 @@ async def upload_file(file: UploadFile = File(...)) -> UploadResponse:
         if not chunks:
             raise DocumentParsingError("No text chunks could be created from this file.")
 
+        if reset_index:
+            print("Resetting vector store for a new upload batch...")
+            reset_vector_store()
+            clear_chat_history()
 
         print("STEP 4: Starting vector storage")
 

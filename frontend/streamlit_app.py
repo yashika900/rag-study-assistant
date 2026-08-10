@@ -36,7 +36,7 @@ def post_chat(question: str) -> dict:
     return response.json()
 
 
-def upload_document(uploaded_file) -> dict:
+def upload_document(uploaded_file, reset_index: bool) -> dict:
     """Upload one file to backend."""
 
     files = {
@@ -46,10 +46,12 @@ def upload_document(uploaded_file) -> dict:
             uploaded_file.type,
         )
     }
+    data = {"reset_index": str(reset_index).lower()}
 
     response = requests.post(
         f"{API_BASE_URL}/upload",
         files=files,
+        data=data,
         timeout=600,
     )
 
@@ -140,12 +142,17 @@ with st.sidebar:
             with st.spinner("Reading and indexing documents..."):
 
                 successful_uploads = 0
+                st.session_state.uploaded_docs = []
+                st.session_state.messages = []
 
-                for uploaded_file in uploaded_files:
+                for index, uploaded_file in enumerate(uploaded_files):
 
                     try:
 
-                        result = upload_document(uploaded_file)
+                        result = upload_document(
+                            uploaded_file,
+                            reset_index=index == 0,
+                        )
 
                         # Avoid duplicates in sidebar
                         if uploaded_file.name not in st.session_state.uploaded_docs:

@@ -6,7 +6,7 @@ import requests
 import streamlit as st
 
 
-API_BASE_URL = "http://127.0.0.1:8000"
+API_BASE_URL = "https://rag-study-assistant-ki23.onrender.com/"
 
 
 st.set_page_config(

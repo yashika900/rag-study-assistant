@@ -6,7 +6,7 @@ import requests
 import streamlit as st
 
 
-API_BASE_URL = "https://rag-study-assistant-ki23.onrender.com/"
+API_BASE_URL = "https://rag-study-assistant-ki23.onrender.com"
 
 
 st.set_page_config(
